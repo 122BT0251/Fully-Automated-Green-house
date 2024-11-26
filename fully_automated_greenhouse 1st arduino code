@@ -1,0 +1,125 @@
+// C++ code
+//
+#include <LiquidCrystal.h> 
+int regSel = 7; // This will select the register for LCD signalling
+int enable = 6; // This will enable the LCD in general
+int sig1 = 5; // Signal 1
+int sig2 = 4; // Signal 2
+int sig3 = 3; // Signal 3
+int sig4 = 2; // Signal 4
+LiquidCrystal lcd(regSel, enable, sig1, sig2, sig3, sig4);
+int readPin = A5;
+int humidityPin = A1;
+int humidity;
+float TempC;
+float readValue;
+float calcValue;
+const int sensor_pin = A0;
+float moisture_percentage;
+int sensor_analog;
+const int motor = 13;
+const int in3 = 12;
+const int in4 = 8;
+const int en2 = 11;
+int pir_pin=10;
+int buzzer_pin=9;
+int motion; 
+void setup()
+{
+ // Serial.begin(9600); // baud rate of 1156200 for comm
+    // LCD to actuall log stuff;
+  lcd.begin(16,2);
+  pinMode(readPin, INPUT);
+  pinMode(humidityPin, INPUT);
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+  pinMode(en2, OUTPUT);
+  pinMode(pir_pin,INPUT);
+  pinMode(buzzer_pin,OUTPUT);
+}
+
+void loop()
+{
+  lcd.clear();
+  readValue = analogRead(readPin);
+  calcValue = readValue*(5.0/1023);
+  TempC = (calcValue-0.5)*100;
+    lcd.setCursor(3, 0); // decides lcd position
+    lcd.print("Temp: "); // prints supplied string
+    lcd.setCursor(9, 0); 
+    lcd.print(TempC);
+    if (TempC < 18)  // For a greenhouse below 18 is cold
+      {
+    	lcd.setCursor(4, 1);
+    	lcd.print("TOO COLD");
+    } 
+      else if (TempC > 27)  // Above 27 is hot for a temperate greenhouse
+        {
+        lcd.setCursor(4, 1); 
+    	lcd.print("TOO HOT");
+    } 
+     else 
+     {
+      	lcd.setCursor(4, 1); 
+    	lcd.print("PERFECT");
+    }
+  delay(500);
+  lcd.clear();
+  humidity = analogRead(humidityPin);
+  lcd.setCursor(3, 0); // decides lcd position
+    lcd.print("Humidity: "); // prints supplied string
+    lcd.setCursor(9, 0); 
+    lcd.print(map(humidityPin, 0, 1023, 10, 70));
+    lcd.print("%");
+  if (map(humidityPin, 0, 1023, 10, 70)< 65) // For a greenhouse below 65% humidity is not good
+    {
+      lcd.setCursor(4, 1);
+    	lcd.print("LOW HUMIDITY");
+    }
+  else if (map(humidityPin, 0, 1023, 10, 70)>85)  // Above 85% humidity is not good
+        {
+        lcd.setCursor(4, 1); 
+    	lcd.print("HIGH HUMIDITY");
+    } 
+  else 
+     {
+      	lcd.setCursor(4, 1); 
+    	lcd.print("PERFECT");
+    }
+  delay(500);
+  lcd.clear();
+  sensor_analog = analogRead(sensor_pin);
+ float Moisture = sensor_analog * 500.0 / 1023.0;
+  lcd.setCursor(3, 0); // decides lcd position
+  lcd.print("Moisture Percentage = "); // prints supplied string
+  lcd.setCursor(9, 0); 
+  lcd.print(Moisture);
+  lcd.print("%\n\n");
+  if (Moisture < 310)  // For a greenhouse all vegetable need soil moisture should
+     {                           //between 41% and 80%
+    	lcd.setCursor(4, 1);
+    	lcd.print("LOW MOISTURE");
+        digitalWrite(motor, HIGH);
+    } 
+      
+     else 
+     {  digitalWrite(motor, LOW);
+      	lcd.setCursor(4, 1); 
+    	lcd.print("PERFECT");
+    }
+  delay(500);
+  lcd.clear();
+   digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+    analogWrite(en2, 255);
+    delay(2000);
+  motion = digitalRead(pir_pin); 
+  if (motion==HIGH){
+   digitalWrite(buzzer_pin,HIGH); 
+  }
+  else {
+   digitalWrite(buzzer_pin,LOW);   
+  }
+  delay(100);
+    
+}
